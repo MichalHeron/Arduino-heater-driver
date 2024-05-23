@@ -22,15 +22,13 @@ LiquidCrystal lcd(8, 9, 4, 5, 6, 7);  // select the pins used on the LCD panel
 
 bool risePower = true;
 double sensorValue = 0;
-int sensorValueTenTimes;
 double prevSensorValue = 0;
-int prevSensorValueTenTimes;
-int setVoltage = 0;
+int setVoltage = 100;
 int AKUPin = A1;
 const int ACPin = A2;  //set arduino signal current read pin  !!!!!!!do skorygowania@@@@@.   CURR
-int gridNoCurrentValue = 0.3;
+double gridNoCurrentValue = 1.5;
 #define ACTectionRange 20;  //set Non-invasive AC Current Sensor tection range (5A,10A,20A)       CURR
-#define VREF 5.0            // check with mutlimetr and calibrate                                 CURR
+#define VREF 4.98            // check with mutlimetr and calibrate                                 CURR
 
 float readACCurrentValue()  //CURR
 {
@@ -58,7 +56,7 @@ double convertToAkuVoltage(double a) {
   // 3 - 44    1024 *3/5 6/10    614.4
   //8000 - 58
   //a - x
-  return akuValueVolt = (58 * a) / 820;  //wartosc 826 wyznaczono iteracyjnie
+  return akuValueVolt = (58 * a) / 815;  //wartosc 800 wyznaczono iteracyjnie 550
 }
 
 double convertPercentToDACRange(int a) {
@@ -85,22 +83,33 @@ void setup() {
 
 void loop() {
   float ACCurrentValue = readACCurrentValue();  //read AC Current Value
-  lcd.setCursor(7, 0);
-  lcd.print("set:");
+  lcd.setCursor(1, 0);
+  lcd.print(" set:");
   lcd.print(setVoltage);
   lcd.print("  ");
   lcd.print(ACCurrentValue);
-  lcd.print("A  ");
+  lcd.print("A   ");
 
-  if ((sensorValue > 52)) {
+  if ((sensorValue > 54)) {
     if (risePower) setVoltage += 1;  //rise by 1%
     else setVoltage -= 1;            //low by 1%
     if (prevSensorValue - 0.15 < sensorValue) risePower = true;
+        if (prevSensorValue - 1 < sensorValue) risePower = true;
     else risePower = false;
     prevSensorValue = sensorValue;
   }
 
-  if (sensorValue < 53.5) setVoltage -= 5;                  //jezeli spadnie ponizej napiecia floating (chyba) if drop below floating value
+  //   if ((sensorValue > 50)) {
+  //   if (risePower) setVoltage += 1;  //rise by 1%
+  //   else setVoltage -= 1;            //low by 1%
+  //   // if (prevSensorValue - 0.5 < sensorValue) risePower = true;
+  //       // if (prevSensorValue - 1 < sensorValue) risePower = true;
+  //   // else risePower = false;
+  //   prevSensorValue = sensorValue;
+  // }
+
+  if (sensorValue < 54) setVoltage -= 2;                  //jezeli spadnie ponizej napiecia floating (chyba) if drop below floating value
+  // if (sensorValue < 50) setVoltage -= 2;                  //jezeli spadnie ponizej napiecia floating (chyba) if drop below floating value
                                                             // if (sensorValue < 50) setVoltage = 0; //wyzerwoanie mocy po naglym spadku ponizej wartosci
   if (ACCurrentValue > gridNoCurrentValue) setVoltage = 0;  //if true it means that inverter uses grid power
   if (setVoltage > 100) setVoltage = 100;
